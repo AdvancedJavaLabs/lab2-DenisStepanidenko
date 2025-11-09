@@ -2,6 +2,7 @@ package org.itmo.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.itmo.model.AggregatorAllSentencesSortingByCountOfSymbols;
 import org.itmo.model.AggregatorDtoCountOfWords;
 import org.itmo.model.AggregatorTopNWordsDto;
 import org.itmo.model.TaskType;
@@ -19,6 +20,7 @@ public class Aggregator {
     private Map<Integer, Long> aggregationResultCountingOfWords = new ConcurrentHashMap<>();
 
     private Map<Integer, Map<String, Integer>> aggregationResultFindingTopNWords = new ConcurrentHashMap<>();
+    private Map<Integer, Map<String, Integer>> aggregationResultAllSentencesSortingByCountOfSymbols = new ConcurrentHashMap<>();
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -132,6 +134,67 @@ public class Aggregator {
             return newValue;
         });
 
+
+    }
+
+    public void aggregateAllSortingSentencesByCountOfSymbols(AggregatorAllSentencesSortingByCountOfSymbols requestSortingSentencesByCountOfSymbols) {
+
+        aggregationResultAllSentencesSortingByCountOfSymbols.compute(requestSortingSentencesByCountOfSymbols.getIdOperation(), (key, value) -> {
+
+            if (value == null) {
+                value = new HashMap<>();
+
+                value.putAll(requestSortingSentencesByCountOfSymbols.getAllSentences());
+                return value;
+            }
+
+            for (Map.Entry<String, Integer> entry : requestSortingSentencesByCountOfSymbols.getAllSentences().entrySet()) {
+
+                if (!value.containsKey(entry.getKey())) {
+                    value.put(entry.getKey(), entry.getValue());
+                }
+            }
+
+            return value;
+
+        });
+
+        FacadeProcessingService.getCompletionOfOperations().computeIfPresent(requestSortingSentencesByCountOfSymbols.getIdOperation(), (key, value) -> {
+
+            int newValue = value - 1;
+
+            if (newValue <= 0) {
+
+                Map<String, Integer> resultMap = aggregationResultAllSentencesSortingByCountOfSymbols.get(requestSortingSentencesByCountOfSymbols.getIdOperation())
+                        .entrySet()
+                        .stream()
+                        .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                        .collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                Map.Entry::getValue,
+                                (e1, e2) -> e1,
+                                LinkedHashMap::new
+                        ));
+
+
+                AggregatorAllSentencesSortingByCountOfSymbols result = new AggregatorAllSentencesSortingByCountOfSymbols(resultMap, requestSortingSentencesByCountOfSymbols.getIdOperation());
+
+                try {
+                    String message = objectMapper.writeValueAsString(result);
+
+                    kafkaProducer.send(TaskType.SORTING_ALL_SENTENCES_BY_COUNT_OF_SYMBOLS.getKafkaTopicResult(), message);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
+
+                aggregationResultAllSentencesSortingByCountOfSymbols.remove(requestSortingSentencesByCountOfSymbols.getIdOperation());
+
+
+                return null;
+            }
+
+            return newValue;
+        });
 
     }
 }

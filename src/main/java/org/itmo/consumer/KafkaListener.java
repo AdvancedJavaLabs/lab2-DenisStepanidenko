@@ -1,13 +1,9 @@
 package org.itmo.consumer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.itmo.model.AggregatorDtoCountOfWords;
-import org.itmo.model.AggregatorTopNWordsDto;
-import org.itmo.model.CalculatingCountOfWordsTaskDto;
-import org.itmo.model.FindTopNWordsTaskDto;
+import org.itmo.model.*;
 import org.itmo.service.ProcessingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -28,9 +24,9 @@ public class KafkaListener {
 
         try {
 
-            CalculatingCountOfWordsTaskDto calculatingCountOfWordsTaskDto = objectMapper.readValue(message, CalculatingCountOfWordsTaskDto.class);
+            BasicTaskDto basicTaskDto = objectMapper.readValue(message, BasicTaskDto.class);
 
-            processingService.calculateCountOfWords(calculatingCountOfWordsTaskDto);
+            processingService.calculateCountOfWords(basicTaskDto);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -81,5 +77,39 @@ public class KafkaListener {
 
     }
 
+
+    @org.springframework.kafka.annotation.KafkaListener(topics = "request-sorting-all-sentences-by-count-of-symbols", groupId = "request-sorting-all-sentences-by-count-of-symbols-group", concurrency = "3")
+    public void handleRequestSortingAllSentencesByCountOfSymbols(String message) {
+
+
+        log.debug("Пришло сообщение в consumer: {}", message);
+
+        try {
+
+            BasicTaskDto basicTaskDto = objectMapper.readValue(message, BasicTaskDto.class);
+
+            processingService.sortingAllSentenceByCountOfSymbols(basicTaskDto);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
+    }
+
+
+    @org.springframework.kafka.annotation.KafkaListener(topics = "result-sorting-all-sentences-by-count-of-symbols", groupId = "result-sorting-all-sentences-by-count-of-symbols-group", concurrency = "1")
+    public void handleResultAllSentencesSortingByCountOfSymbols(String message) {
+
+        try {
+            AggregatorAllSentencesSortingByCountOfSymbols result = objectMapper.readValue(message, AggregatorAllSentencesSortingByCountOfSymbols.class);
+
+            log.info("Пришёл ответ по операции с id = {}. Отсортированный список предложений по кол-ву символов: {}", result.getIdOperation(), result.getAllSentences());
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
 
 }

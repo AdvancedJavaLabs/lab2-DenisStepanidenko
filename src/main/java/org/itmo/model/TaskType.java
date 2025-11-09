@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum TaskType {
 
     COUNT_OF_WORD("request-count-of-words", "result-count-of-words"),
-    FIND_TOP_N_WORDS("request-find-top-n-words", "result-find-top-n-words");
+    FIND_TOP_N_WORDS("request-find-top-n-words", "result-find-top-n-words"),
+    SORTING_ALL_SENTENCES_BY_COUNT_OF_SYMBOLS("request-sorting-all-sentences-by-count-of-symbols", "result-sorting-all-sentences-by-count-of-symbols"),;
 
 
     private final String kafkaTopicRequest;

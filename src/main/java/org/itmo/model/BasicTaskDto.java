@@ -7,7 +7,7 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class CalculatingCountOfWordsTaskDto {
+public class BasicTaskDto {
 
     private TextSection textSection;
     private int idOperation;

@@ -14,7 +14,14 @@ public class KafkaConfig {
 
 
     @Bean
-    public NewTopic FindingTopNWordsTopic() {
+    public NewTopic findingTopNWordsTopic() {
         return new NewTopic("request-find-top-n-words", 3, (short) 1);
     }
+
+    @Bean
+    public NewTopic sortingAllSentencesByCountOfSymbols() {
+        return new NewTopic("request-sorting-all-sentences-by-count-of-symbols", 3, (short) 1);
+    }
+
+
 }

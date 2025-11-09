@@ -7,10 +7,15 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class FindTopNWordsTaskDto {
+public class FindTopNWordsTaskDto extends BasicTaskDto {
 
-    private TextSection textSection;
-    private int idOperation;
-    int n;
+    private int n;
+
+    public FindTopNWordsTaskDto(TextSection textSection, int idOperation, int n) {
+        super(textSection, idOperation);
+        this.n = n;
+    }
+
+
 
 }

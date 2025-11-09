@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import org.itmo.model.FindTopNWordsTaskDto;
 import org.itmo.producer.KafkaProducer;
-import org.itmo.model.CalculatingCountOfWordsTaskDto;
+import org.itmo.model.BasicTaskDto;
 import org.itmo.model.TaskType;
 import org.itmo.model.TextSection;
 import org.springframework.stereotype.Component;
@@ -74,10 +74,10 @@ public class FacadeProcessingService {
 
         for (TextSection textSection : allTextBySections) {
 
-            CalculatingCountOfWordsTaskDto calculatingCountOfWordsTaskDto = new CalculatingCountOfWordsTaskDto(textSection, currentIdOperation);
+            BasicTaskDto basicTaskDto = new BasicTaskDto(textSection, currentIdOperation);
 
             try {
-                String message = objectMapper.writeValueAsString(calculatingCountOfWordsTaskDto);
+                String message = objectMapper.writeValueAsString(basicTaskDto);
 
                 kafkaProducer.send(TaskType.COUNT_OF_WORD.getKafkaTopicRequest(), message);
 
@@ -88,6 +88,9 @@ public class FacadeProcessingService {
 
     }
 
+    /**
+     * Поиск топ N слов.
+     */
     public void findNTopWords(int n) {
 
         if (n <= 0) {
@@ -117,6 +120,36 @@ public class FacadeProcessingService {
 
 
     }
+
+    /**
+     * Сортировка всех предложений по кол-ву символов
+     */
+    public void sortingAllSentencesByCountOfSymbols() {
+
+
+        int currentIdOperation = idOperation.incrementAndGet();
+        int length = allTextBySections.size();
+
+        completionOfOperations.put(currentIdOperation, length);
+
+        for (TextSection textSection : allTextBySections) {
+
+            try {
+
+                BasicTaskDto basicTaskDto = new BasicTaskDto(textSection, currentIdOperation);
+
+                String message = objectMapper.writeValueAsString(basicTaskDto);
+
+                kafkaProducer.send(TaskType.SORTING_ALL_SENTENCES_BY_COUNT_OF_SYMBOLS.getKafkaTopicRequest(), message);
+
+
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+    }
+
 
     /**
      * Разделяет все предложения по секциям из N предложений.

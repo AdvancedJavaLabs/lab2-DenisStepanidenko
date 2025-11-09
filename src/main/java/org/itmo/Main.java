@@ -21,7 +21,7 @@ public class Main {
 
         facadeProcessingService.initialize(path);
 
-        facadeProcessingService.findNTopWords(10);
+        facadeProcessingService.sortingAllSentencesByCountOfSymbols();
     }
 
 

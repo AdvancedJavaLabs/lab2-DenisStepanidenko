@@ -1,16 +1,11 @@
 package org.itmo.service;
 
-import org.itmo.model.AggregatorDtoCountOfWords;
-import org.itmo.model.AggregatorTopNWordsDto;
-import org.itmo.model.CalculatingCountOfWordsTaskDto;
-import org.itmo.model.FindTopNWordsTaskDto;
+import org.itmo.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component
 public class ProcessingService {
@@ -19,25 +14,25 @@ public class ProcessingService {
     private Aggregator aggregator;
 
 
-    public void calculateCountOfWords(CalculatingCountOfWordsTaskDto calculatingCountOfWordsTaskDto) {
+    public void calculateCountOfWords(BasicTaskDto basicTaskDto) {
 
         long count = 0;
 
-        for (String str : calculatingCountOfWordsTaskDto.getTextSection().getSentences()) {
+        for (String str : basicTaskDto.getTextSection().getSentences()) {
 
             if (str.isEmpty()) continue;
 
             count += str.split("\\s+").length;
         }
 
-        aggregator.aggregateCalculatingCountOfWords(new AggregatorDtoCountOfWords(count, calculatingCountOfWordsTaskDto.getIdOperation()));
+        aggregator.aggregateCalculatingCountOfWords(new AggregatorDtoCountOfWords(count, basicTaskDto.getIdOperation()));
 
     }
 
 
     public void findTopNWords(FindTopNWordsTaskDto findTopNWordsTaskDto) {
 
-        Map<String, Integer> topWords = new HashMap<>();
+        Map<String, Integer> allWords = new HashMap<>();
 
         for (String sentence : findTopNWordsTaskDto.getTextSection().getSentences()) {
 
@@ -47,10 +42,10 @@ public class ProcessingService {
 
                 String cleanedWord = word.replaceAll("[^a-zA-Zа-яА-Я]", "");
 
-                if (topWords.containsKey(cleanedWord.toLowerCase())) {
-                    topWords.put(cleanedWord.toLowerCase(), topWords.get(cleanedWord.toLowerCase()) + 1);
+                if (allWords.containsKey(cleanedWord.toLowerCase())) {
+                    allWords.put(cleanedWord.toLowerCase(), allWords.get(cleanedWord.toLowerCase()) + 1);
                 } else {
-                    topWords.put(cleanedWord.toLowerCase(), 1);
+                    allWords.put(cleanedWord.toLowerCase(), 1);
                 }
 
             }
@@ -58,7 +53,25 @@ public class ProcessingService {
 
         }
 
-        aggregator.aggregateFindingTopNWords(new AggregatorTopNWordsDto(topWords, findTopNWordsTaskDto.getN(), findTopNWordsTaskDto.getIdOperation()));
+        aggregator.aggregateFindingTopNWords(new AggregatorTopNWordsDto(allWords, findTopNWordsTaskDto.getN(), findTopNWordsTaskDto.getIdOperation()));
+
+    }
+
+    public void sortingAllSentenceByCountOfSymbols(BasicTaskDto basicTaskDto) {
+
+
+        Map<String, Integer> allSentences = new HashMap<>();
+
+        for (String sentence : basicTaskDto.getTextSection().getSentences()) {
+
+            if (!allSentences.containsKey(sentence.toLowerCase())) {
+                allSentences.put(sentence.toLowerCase(), sentence.toCharArray().length);
+            }
+
+        }
+
+        aggregator.aggregateAllSortingSentencesByCountOfSymbols(new AggregatorAllSentencesSortingByCountOfSymbols(allSentences, basicTaskDto.getIdOperation()));
+
 
     }
 }
