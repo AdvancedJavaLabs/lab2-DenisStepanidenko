@@ -1,5 +1,10 @@
 spring:
   kafka:
+    properties:
+      auto.create.topics.enable: true
+    admin:
+      properties:
+        auto.create.topics.enable: true
     bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer

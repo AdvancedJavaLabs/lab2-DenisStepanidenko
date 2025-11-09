@@ -1,15 +1,15 @@
 package org.itmo;
 
-import org.itmo.consumer.KafkaConsumer;
-import org.itmo.service.ProcessingService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.itmo.service.FacadeProcessingService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
+import org.springframework.kafka.annotation.EnableKafka;
 
 import java.io.IOException;
 
 @SpringBootApplication
+@EnableKafka
 public class Main {
 
     private static String path = "C:\\Users\\stepa\\IdeaProjects\\lab2-DenisStepanidenko\\Text1.txt";
@@ -17,11 +17,11 @@ public class Main {
     public static void main(String[] args) throws IOException {
 
         ApplicationContext context = SpringApplication.run(Main.class, args);
-        ProcessingService processingService = context.getBean(ProcessingService.class);
+        FacadeProcessingService facadeProcessingService = context.getBean(FacadeProcessingService.class);
 
-        processingService.initialize(path);
+        facadeProcessingService.initialize(path);
 
-        processingService.countOfWords();
+        facadeProcessingService.findNTopWords(10);
     }
 
 

@@ -7,11 +7,9 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class DtoKafkaTask {
+public class CalculatingCountOfWordsTaskDto {
 
     private TextSection textSection;
     private int idOperation;
-    private int totalCountOfSections;
-
 
 }

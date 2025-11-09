@@ -3,16 +3,16 @@ package org.itmo.model;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
-import java.util.List;
+import java.util.Map;
 
 @Getter
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class TextSection {
+public class AggregatorTopNWordsDto {
 
-    private List<String> sentences;
+    private Map<String, Integer> topNWords;
+    private int n;
+    private int idOperation;
 
 }
