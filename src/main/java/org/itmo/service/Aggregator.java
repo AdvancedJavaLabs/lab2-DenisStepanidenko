@@ -2,10 +2,7 @@ package org.itmo.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.itmo.model.AggregatorAllSentencesSortingByCountOfSymbols;
-import org.itmo.model.AggregatorDtoCountOfWords;
-import org.itmo.model.AggregatorTopNWordsDto;
-import org.itmo.model.TaskType;
+import org.itmo.model.*;
 import org.itmo.producer.KafkaProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -21,6 +18,9 @@ public class Aggregator {
 
     private Map<Integer, Map<String, Integer>> aggregationResultFindingTopNWords = new ConcurrentHashMap<>();
     private Map<Integer, Map<String, Integer>> aggregationResultAllSentencesSortingByCountOfSymbols = new ConcurrentHashMap<>();
+
+    private Map<Integer, List<Double>> aggregationResultSentiment = new ConcurrentHashMap<>();
+    private Map<Integer, Map<Integer, List<String>>> aggregationResultNameReplacement = new ConcurrentHashMap<>();
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -197,4 +197,102 @@ public class Aggregator {
         });
 
     }
+
+    public void aggregateSentiment(AggregatorSentimentalDto aggregatorSentimentalDto) {
+
+        aggregationResultSentiment.compute(aggregatorSentimentalDto.getIdOperation(), (key, value) -> {
+            if (value == null) {
+                value = new ArrayList<>();
+            }
+            value.add(aggregatorSentimentalDto.getAverageSentiment());
+            return value;
+        });
+
+        FacadeProcessingService.getCompletionOfOperations().computeIfPresent(
+                aggregatorSentimentalDto.getIdOperation(), (key, value) -> {
+                    int newValue = value - 1;
+                    if (newValue <= 0) {
+
+                        double averageSentiment = aggregationResultSentiment
+                                .get(aggregatorSentimentalDto.getIdOperation())
+                                .stream()
+                                .mapToDouble(Double::doubleValue)
+                                .average()
+                                .orElse(0.0);
+
+                        AggregatorSentimentalResultDto result = new AggregatorSentimentalResultDto(
+                                classifyFinalSentiment(averageSentiment), averageSentiment, aggregatorSentimentalDto.getIdOperation()
+                        );
+
+                        try {
+                            String message = objectMapper.writeValueAsString(result);
+                            kafkaProducer.send(TaskType.ANALYZE_SENTIMENTAL.getKafkaTopicResult(), message);
+                        } catch (JsonProcessingException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        aggregationResultSentiment.remove(aggregatorSentimentalDto.getIdOperation());
+                        return null;
+                    }
+                    return newValue;
+                });
+    }
+
+    private String classifyFinalSentiment(double score) {
+        if (score < 1.8) {
+            return "Очень негативный";
+        } else if (score < 2.6) {
+            return "Негативный";
+        } else if (score < 3.4) {
+            return "Нейтральный";
+        } else if (score < 4.2) {
+            return "Позитивный";
+        } else {
+            return "Очень позитивный";
+        }
+    }
+
+
+    public void aggregateNameReplacement(AggregatorReplaceNamesDto replaceNamesDto) {
+        aggregationResultNameReplacement.compute(replaceNamesDto.getIdOperation(), (key, value) -> {
+            if (value == null) {
+                value = new TreeMap<>();
+            }
+            value.put(replaceNamesDto.getSectionIndex(), replaceNamesDto.getProcessedSentences());
+            return value;
+        });
+
+        FacadeProcessingService.getCompletionOfOperations().computeIfPresent(
+                replaceNamesDto.getIdOperation(), (key, value) -> {
+                    int newValue = value - 1;
+                    if (newValue <= 0) {
+
+                        List<String> allProcessedSentences = aggregationResultNameReplacement
+                                .get(replaceNamesDto.getIdOperation())
+                                .entrySet()
+                                .stream()
+                                .sorted(Map.Entry.comparingByKey())
+                                .flatMap(entry -> entry.getValue().stream())
+                                .collect(Collectors.toList());
+
+
+                        try {
+
+                            AggregatorReplaceNamesDto result = new AggregatorReplaceNamesDto(allProcessedSentences, replaceNamesDto.getIdOperation(), 0);
+
+                            String message = objectMapper.writeValueAsString(result);
+
+                            kafkaProducer.send(TaskType.REPLACE_ALL_NAMES.getKafkaTopicResult(), message);
+                        } catch (JsonProcessingException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        aggregationResultNameReplacement.remove(replaceNamesDto.getIdOperation());
+                        return null;
+                    }
+                    return newValue;
+                });
+    }
+
+
 }

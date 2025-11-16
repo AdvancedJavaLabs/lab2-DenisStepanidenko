@@ -21,7 +21,7 @@ public class Main {
 
         facadeProcessingService.initialize(path);
 
-        facadeProcessingService.sortingAllSentencesByCountOfSymbols();
+        facadeProcessingService.replace("Denis");
     }
 
 

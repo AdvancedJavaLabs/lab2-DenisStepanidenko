@@ -112,4 +112,71 @@ public class KafkaListener {
 
     }
 
+    @org.springframework.kafka.annotation.KafkaListener(topics = "request-analyze-sentimental", groupId = "request-analyze-sentimental-group", concurrency = "3")
+    public void handelRequestAnalyzeSentimental(String message) {
+
+        log.debug("Пришло сообщение в consumer: {}", message);
+
+        try {
+
+            BasicTaskDto basicTaskDto = objectMapper.readValue(message, BasicTaskDto.class);
+
+            processingService.analyzeSentimental(basicTaskDto);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+
+    @org.springframework.kafka.annotation.KafkaListener(topics = "result-analyze-sentimental", groupId = "result-analyze-sentimental-group", concurrency = "1")
+    public void handelResultAnalyzeSentimental(String message) {
+
+
+        try {
+
+            AggregatorSentimentalResultDto result = objectMapper.readValue(message, AggregatorSentimentalResultDto.class);
+
+            log.info("Пришёл ответ по операции id : {}. Средняя тональность : {}, Общий тон: {}", result.getIdOperation(), result.getAverageSentiment(), result.getSentiment());
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    @org.springframework.kafka.annotation.KafkaListener(topics = "request-replace-all-names", groupId = "request-replace-all-names-group", concurrency = "3")
+    public void handleRequestReplaceNames(String message) {
+
+        log.debug("Пришло сообщение в consumer: {}", message);
+
+        try {
+
+            ReplaceTaskDto request = objectMapper.readValue(message, ReplaceTaskDto.class);
+
+            processingService.replaceNames(request);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @org.springframework.kafka.annotation.KafkaListener(topics = "result-replace-all-names", groupId = "result-replace-all-names-group", concurrency = "1")
+    public void handleResultReplaceNames(String message) {
+
+
+
+        try {
+
+            AggregatorReplaceNamesDto result = objectMapper.readValue(message, AggregatorReplaceNamesDto.class);
+
+            log.info("Пришёл ответ по операции id : {}. Изменённый текст: {}", result.getIdOperation(), String.join(" ", result.getProcessedSentences()));
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 }

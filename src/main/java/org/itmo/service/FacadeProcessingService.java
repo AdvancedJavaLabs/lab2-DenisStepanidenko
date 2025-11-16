@@ -3,11 +3,8 @@ package org.itmo.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
-import org.itmo.model.FindTopNWordsTaskDto;
+import org.itmo.model.*;
 import org.itmo.producer.KafkaProducer;
-import org.itmo.model.BasicTaskDto;
-import org.itmo.model.TaskType;
-import org.itmo.model.TextSection;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -88,6 +85,30 @@ public class FacadeProcessingService {
 
     }
 
+    public void analyzeSentiment() {
+
+        int currentIdOperation = idOperation.incrementAndGet();
+        int length = allTextBySections.size();
+
+        completionOfOperations.put(currentIdOperation, length);
+
+        for (TextSection textSection : allTextBySections) {
+
+            BasicTaskDto basicTaskDto = new BasicTaskDto(textSection, currentIdOperation);
+
+            try {
+                String message = objectMapper.writeValueAsString(basicTaskDto);
+
+                kafkaProducer.send(TaskType.ANALYZE_SENTIMENTAL.getKafkaTopicRequest(), message);
+
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+    }
+
     /**
      * Поиск топ N слов.
      */
@@ -148,6 +169,33 @@ public class FacadeProcessingService {
             }
         }
 
+    }
+
+    public void replace(String replaceWord) {
+
+        int currentIdOperation = idOperation.incrementAndGet();
+        int length = allTextBySections.size();
+
+        completionOfOperations.put(currentIdOperation, length);
+
+        int id = 1;
+
+        for (TextSection textSection : allTextBySections) {
+
+            try {
+
+                ReplaceTaskDto basicTaskDto = new ReplaceTaskDto(textSection, currentIdOperation, replaceWord, id);
+                id++;
+
+                String message = objectMapper.writeValueAsString(basicTaskDto);
+
+                kafkaProducer.send(TaskType.REPLACE_ALL_NAMES.getKafkaTopicRequest(), message);
+
+
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
 

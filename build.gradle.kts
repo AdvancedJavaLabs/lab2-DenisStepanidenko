@@ -23,6 +23,20 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
     testImplementation(kotlin("test"))
+
+    // Stanford CoreNLP для анализа тональности
+    implementation("edu.stanford.nlp:stanford-corenlp:4.5.0")
+    implementation("edu.stanford.nlp:stanford-corenlp:4.5.0:models")
+    implementation("edu.stanford.nlp:stanford-corenlp:4.5.0:models-english")
+
+    // OpenNLP для NER (распознавания имен)
+    implementation("org.apache.opennlp:opennlp-tools:2.2.0")
+
+
+
+    // Дополнительные зависимости для Stanford NLP
+    implementation("com.google.protobuf:protobuf-java:3.21.12")
+    implementation("org.slf4j:slf4j-api:2.0.7")
 }
 
 

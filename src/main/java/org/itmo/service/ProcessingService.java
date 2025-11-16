@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -12,6 +13,12 @@ public class ProcessingService {
 
     @Autowired
     private Aggregator aggregator;
+
+    @Autowired
+    private SentimentAnalysisService sentimentAnalysisService;
+
+    @Autowired
+    private NameReplacementService nameReplacementService;
 
 
     public void calculateCountOfWords(BasicTaskDto basicTaskDto) {
@@ -74,4 +81,25 @@ public class ProcessingService {
 
 
     }
+
+    public void analyzeSentimental(BasicTaskDto basicTaskDto) {
+
+
+        TextSection textSection = basicTaskDto.getTextSection();
+
+        double sentiment = sentimentAnalysisService.analyzeSentiment(textSection);
+
+        aggregator.aggregateSentiment(new AggregatorSentimentalDto(sentiment, basicTaskDto.getIdOperation()));
+    }
+
+    public void replaceNames(ReplaceTaskDto request) {
+
+        List<String> processedSentences = nameReplacementService.replaceNames(request);
+
+
+        aggregator.aggregateNameReplacement(new AggregatorReplaceNamesDto(processedSentences, request.getIdOperation(), request.getSectionId()));
+
+    }
+
+
 }
