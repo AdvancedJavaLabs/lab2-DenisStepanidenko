@@ -1,0 +1,37 @@
+spring:
+  kafka:
+    properties:
+      auto.create.topics.enable: true
+    admin:
+      properties:
+        auto.create.topics.enable: true
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  jackson:
+    encoding:
+      charset: UTF-8
+
+logging:
+  charset:
+    console: UTF-8
+
+kafka:
+  topic:
+    request:
+      count-of-words: "request-count-of-words"
+
+
