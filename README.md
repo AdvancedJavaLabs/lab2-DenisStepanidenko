@@ -61,7 +61,10 @@ RabbitMQ --- прост в развёртывании, понятная моде
 
 <img width="1008" height="706" alt="Время выполнения задачи Top-25 слов" src="https://github.com/user-attachments/assets/85df0e98-ce2d-49b1-8fcb-0d7c0ef130e8" />
 
-# Оценка масштабируемости задачи **Простой анализ тональности (с помощью StanfordCoreNLP)**.
+# Оценка масштабируемости задачи **Сортировка предложений по количеству символов**.
+
+<img width="989" height="590" alt="Сортировка предложений по кол-ву символов" src="https://github.com/user-attachments/assets/ffcab6d6-9b16-4ee8-aa17-59abf9dcf9ca" />
+
 
 
 
